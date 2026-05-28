@@ -1,9 +1,6 @@
 .pio/
 .vscode/
-.DS_Store
 *.o
-*.elf
+*.a
 *.bin
-*.hex
-*.map
 build/
