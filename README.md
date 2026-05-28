@@ -11,7 +11,7 @@ PlatformIO + Arduino framework, C++11, target ESP32-C3.
 - LWT (Last Will and Testament) support.
 - Synchronous polling reconnect with configurable interval.
 - Compile-time feature flags with documented defaults.
-- `publishAck` — JSON ACK helper for command-driven sensor pattern (requires ArduinoJson v6).
+- `publishAck` — JSON ACK helper for command-driven sensor pattern (requires ArduinoJson v7).
 - TLS-ready: code guarded under `#if KAREN_MQTT_TLS` compiles when flag is set.
 - Topic convention: `esp/<deviceId>/<domain>/(command|event)` + `esp/<deviceId>/availability`.
 
@@ -25,7 +25,7 @@ Add to your `platformio.ini`:
 lib_deps =
     https://github.com/swat121/KarenMqttCore.git
     knolleary/PubSubClient @ ^2.8
-    bblanchon/ArduinoJson @ ^6.21
+    bblanchon/ArduinoJson @ ^7.0
 ```
 
 ### Arduino IDE

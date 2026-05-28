@@ -34,7 +34,7 @@ static bool        subscribed = false;
 // ---------------------------------------------------------------------------
 void handleSensorCommand(const char* /*topic*/, const uint8_t* payload, size_t len)
 {
-    StaticJsonDocument<256> req;
+    JsonDocument req;
     DeserializationError err = deserializeJson(req, payload, len);
     if (err) {
         KAREN_MQTT_LOG("JSON parse error: %s", err.c_str());
@@ -44,7 +44,7 @@ void handleSensorCommand(const char* /*topic*/, const uint8_t* payload, size_t l
     const char* requestId = req["requestId"] | "";
 
     // Build dummy sensor reading — replace with real sensor read in firmware.
-    StaticJsonDocument<128> respDoc;
+    JsonDocument respDoc;
     JsonObject resp = respDoc.to<JsonObject>();
     resp["temperatureC"] = 21.5f;
 

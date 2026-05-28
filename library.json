@@ -24,7 +24,7 @@
     },
     {
       "name": "ArduinoJson",
-      "version": "^6.21",
+      "version": "^7.0",
       "authors": "bblanchon"
     }
   ],

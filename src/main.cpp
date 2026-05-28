@@ -66,14 +66,14 @@ static bool          mqttSubscribed = false;
 // ---------------------------------------------------------------------------
 void handleSensorCommand(const char* /*topic*/, const uint8_t* payload, size_t len)
 {
-    StaticJsonDocument<256> req;
+    JsonDocument req;
     if (deserializeJson(req, payload, len)) {
         KAREN_MQTT_LOG("sensor cmd: JSON parse error");
         return;
     }
     const char* requestId = req["requestId"] | "";
 
-    StaticJsonDocument<128> respDoc;
+    JsonDocument respDoc;
     JsonObject resp = respDoc.to<JsonObject>();
     resp["temperatureC"] = 21.5f;
     mqtt.publishAck(topics.event("sensor").c_str(), requestId, true, resp);
