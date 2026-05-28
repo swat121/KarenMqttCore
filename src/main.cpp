@@ -24,8 +24,8 @@
 
 #include <Arduino.h>
 #include <WiFiClient.h>
-#include <KarenConnectionLib.h>
-#include "KarenErrorHandler/KarenErrorHandler.h"
+#include <KarenConnectionLib/KarenConnectionLib.h>
+#include <KarenErrorHandler/KarenErrorHandler.h>
 #include "KarenMqttCore.h"
 
 // ---------------------------------------------------------------------------
