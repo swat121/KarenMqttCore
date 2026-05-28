@@ -30,6 +30,7 @@
   ],
   "build": {
     "srcDir": "src",
-    "srcFilter": ["+<*>", "-<main.cpp>"]
+    "srcFilter": ["+<*>", "-<main.cpp>"],
+    "includeDir": "src/KarenConnectionLib"
   }
 }
