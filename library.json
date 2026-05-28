@@ -1,0 +1,34 @@
+{
+  "name": "KarenMqttCore",
+  "version": "0.1.0",
+  "description": "Modular MQTT transport and topic router library for ESP32 (PlatformIO/Arduino, C++11).",
+  "keywords": ["mqtt", "esp32", "pubsubclient", "router", "arduino", "karen"],
+  "license": "MIT",
+  "headers": "KarenMqttCore.h",
+  "authors": {
+    "name": "Denis Kuschovyi",
+    "url": "https://github.com/swat121"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/swat121/KarenMqttCore"
+  },
+  "frameworks": ["arduino"],
+  "platforms": ["espressif32"],
+  "examples": ["examples/*/src/*.ino"],
+  "dependencies": [
+    {
+      "name": "PubSubClient",
+      "version": "^2.8",
+      "authors": "knolleary"
+    },
+    {
+      "name": "ArduinoJson",
+      "version": "^6.21",
+      "authors": "bblanchon"
+    }
+  ],
+  "build": {
+    "srcDir": "src"
+  }
+}

@@ -1,0 +1,51 @@
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+KarenMqttClient	KEYWORD1
+KarenMqttTopics	KEYWORD1
+KarenMqttClientId	KEYWORD1
+MqttTransport	KEYWORD1
+MqttTopicRouter	KEYWORD1
+MqttConfig	KEYWORD1
+MqttLwt	KEYWORD1
+MqttHandler	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin	KEYWORD2
+loop	KEYWORD2
+on	KEYWORD2
+off	KEYWORD2
+publish	KEYWORD2
+publishAck	KEYWORD2
+subscribe	KEYWORD2
+unsubscribe	KEYWORD2
+isConnected	KEYWORD2
+connect	KEYWORD2
+disconnect	KEYWORD2
+dispatch	KEYWORD2
+clear	KEYWORD2
+setCaCertificate	KEYWORD2
+setMessageCallback	KEYWORD2
+transport	KEYWORD2
+router	KEYWORD2
+command	KEYWORD2
+event	KEYWORD2
+availability	KEYWORD2
+fromMac	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+KAREN_MQTT_BUFFER_SIZE	LITERAL1
+KAREN_MQTT_MAX_HANDLERS	LITERAL1
+KAREN_MQTT_JSON_ACK	LITERAL1
+KAREN_MQTT_DEBUG	LITERAL1
+KAREN_MQTT_TLS	LITERAL1
+KAREN_MQTT_WILDCARDS	LITERAL1
+KAREN_MQTT_DEFAULT_KEEPALIVE_SEC	LITERAL1
+KAREN_MQTT_DEFAULT_RECONNECT_INTERVAL_MS	LITERAL1
