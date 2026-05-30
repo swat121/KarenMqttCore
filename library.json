@@ -1,6 +1,6 @@
 {
   "name": "KarenMqttCore",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Modular MQTT transport and topic router library for ESP32 (PlatformIO/Arduino, C++11).",
   "keywords": ["mqtt", "esp32", "pubsubclient", "router", "arduino", "karen"],
   "license": "MIT",
