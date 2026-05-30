@@ -3,7 +3,15 @@
 #include <Arduino.h>
 
 // ---------------------------------------------------------------------------
-// KarenMqttTopics — topic convention: esp/<deviceId>/<domain>/(command|event)
+// KarenMqttTopics — topic conventions for Karen ecosystem
+//
+//   esp/<deviceId>/<domain>/(command|event)   — per-device request/response
+//   esp/<deviceId>/connect                    — LWT + ONLINE/OFFLINE
+//   esp/<deviceId>/<leaf>                     — free-form one-level topic
+//   esp/health                                — broadcast heartbeat
+//
+// Note: `health()` returns a topic WITHOUT deviceId — heartbeat is a single
+// shared channel; deviceId is carried in the payload.
 // ---------------------------------------------------------------------------
 
 class KarenMqttTopics
@@ -26,10 +34,24 @@ public:
         return base_ + "/" + domain + "/event";
     }
 
-    // esp/<deviceId>/availability
-    String availability() const
+    // esp/<deviceId>/connect — LWT + ONLINE/OFFLINE state, retain=true
+    String connect() const
     {
-        return base_ + "/availability";
+        return base_ + "/connect";
+    }
+
+    // esp/<deviceId>/<leaf> — free-form, used for legacy/one-off topics
+    // such as esp/<id>/sensor (push pattern) or esp/<id>/error.
+    String custom(const char* leaf) const
+    {
+        return base_ + "/" + leaf;
+    }
+
+    // esp/health — single broadcast channel for all devices. NOTE: no deviceId
+    // in the path; the publisher must include deviceId in the JSON payload.
+    static String health()
+    {
+        return String("esp/health");
     }
 
     const String& base() const { return base_; }

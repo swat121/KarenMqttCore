@@ -13,7 +13,7 @@ PlatformIO + Arduino framework, C++11, target ESP32-C3.
 - Compile-time feature flags with documented defaults.
 - `publishAck` — JSON ACK helper for command-driven sensor pattern (requires ArduinoJson v7).
 - TLS-ready: code guarded under `#if KAREN_MQTT_TLS` compiles when flag is set.
-- Topic convention: `esp/<deviceId>/<domain>/(command|event)` + `esp/<deviceId>/availability`.
+- Topic convention: `esp/<deviceId>/<domain>/(command|event)` + `esp/<deviceId>/connect` + broadcast `esp/health`.
 
 ## Installation
 
@@ -43,23 +43,27 @@ WiFiClient         netClient;
 KarenMqttClient    mqtt(netClient);
 KarenMqttTopics    topics("my-device-01");
 
-// Keep as a global String — c_str() must remain valid for the mqtt object's lifetime.
-static String      availTopic;
+// Keep as globals — c_str() must remain valid for the mqtt object's lifetime.
+static String      connectTopic;
+static String      lwtPayload;       // JSON OFFLINE payload, used as LWT
 static bool        subscribed = false;
 
 void setup() {
     WiFi.begin("SSID", "PASSWORD");
     while (WiFi.status() != WL_CONNECTED) delay(500);
 
-    availTopic = topics.availability();
+    // See docs/registration-protocol.md for the full connect/LWT payload shape:
+    //   { "deviceId", "macAddress", "status": "ONLINE"|"OFFLINE", "bootId" }
+    connectTopic = topics.connect();
+    lwtPayload   = "{\"deviceId\":\"my-device-01\",\"status\":\"OFFLINE\"}";  // simplified
 
     MqttConfig cfg;
     cfg.host     = "broker.hivemq.com";
     cfg.port     = 1883;
     cfg.clientId = "karen-my-device-01";
     cfg.deviceId = "my-device-01";
-    cfg.lwt.topic   = availTopic.c_str();
-    cfg.lwt.payload = "offline";
+    cfg.lwt.topic   = connectTopic.c_str();
+    cfg.lwt.payload = lwtPayload.c_str();
     cfg.lwt.qos     = 1;
     cfg.lwt.retain  = true;
     cfg.hasLwt   = true;
@@ -112,7 +116,9 @@ See `examples/basic/` for a complete command-driven sensor example with `publish
 | `KarenMqttTopics(const char* deviceId)` | Constructor. |
 | `String command(const char* domain)` | Returns `esp/<deviceId>/<domain>/command`. |
 | `String event(const char* domain)` | Returns `esp/<deviceId>/<domain>/event`. |
-| `String availability()` | Returns `esp/<deviceId>/availability`. |
+| `String connect()` | Returns `esp/<deviceId>/connect` — used for LWT and ONLINE state. |
+| `String custom(const char* leaf)` | Returns `esp/<deviceId>/<leaf>` — free-form one-level topic (e.g. `esp/<id>/sensor` legacy push). |
+| `static String health()` | Returns `esp/health` — broadcast heartbeat channel (no deviceId in path). |
 | `const String& base()` | Returns `esp/<deviceId>`. |
 
 ### `MqttConfig`
@@ -147,8 +153,10 @@ Override in `build_flags` in your `platformio.ini`:
 
 ```
 esp/<deviceId>/<domain>/command   <- device receives commands
-esp/<deviceId>/<domain>/event     <- device publishes readings / results
-esp/<deviceId>/availability       <- LWT: "online" / "offline"
+esp/<deviceId>/<domain>/event     <- device publishes readings / results / errors
+esp/<deviceId>/connect            <- LWT + ONLINE/OFFLINE JSON (retain=true)
+esp/<deviceId>/<leaf>             <- free-form one-level (legacy push patterns)
+esp/health                        <- broadcast heartbeat (deviceId in payload)
 ```
 
 Example for `deviceId = "sensor-01"` and `domain = "sensor"`:
@@ -156,8 +164,13 @@ Example for `deviceId = "sensor-01"` and `domain = "sensor"`:
 ```
 esp/sensor-01/sensor/command
 esp/sensor-01/sensor/event
-esp/sensor-01/availability
+esp/sensor-01/connect
+esp/health
 ```
+
+For the full Karen ecosystem registration protocol (payload shapes, `bootId`
+semantics, capabilities, sensor pull pattern), see
+[`docs/registration-protocol.md`](docs/registration-protocol.md).
 
 ## Building
 
@@ -167,11 +180,12 @@ To build the example locally:
 pio run -d examples/basic
 ```
 
-## Limitations (v0.1)
+## Limitations
 
 - **No wildcard routing** — exact-match only. Building with `-DKAREN_MQTT_WILDCARDS=1` causes a compile-error.
-- **No re-subscribe after reconnect** — subscriptions must be re-issued after reconnect. Use the connect-transition pattern shown in Quick Start (`subscribed` flag in `loop()`). An `onConnect` callback is planned for v0.2.
+- **No re-subscribe after reconnect** — subscriptions must be re-issued after reconnect. Use the connect-transition pattern shown in Quick Start (`subscribed` flag in `loop()`). An `onConnect` callback is planned for the upcoming `KarenDevicePresence` library.
 - **No offline publish queue** — `publish()` returns `false` when disconnected; messages are dropped.
+- **No high-level registration flow** — building the connect/LWT JSON, generating `bootId`, and publishing meta is left to the firmware. The `KarenDevicePresence` library will encapsulate this.
 
 ## Examples
 

@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <WiFiClient.h>
+#include <esp_system.h>
 #include "KarenMqttCore.h"
 
 // ---------------------------------------------------------------------------
@@ -20,14 +21,37 @@ WiFiClient         netClient;
 KarenMqttClient    mqtt(netClient);
 KarenMqttTopics    topics(kDeviceId);
 
-// availTopic is kept as a global String so its c_str() pointer remains valid
-// for the lifetime of the MqttConfig / mqtt object.
-// MqttConfig and MqttLwt hold shallow const char* pointers — see KarenMqttConfig.h
-// lifetime note.
-static String      availTopic;
-
-// Tracks whether we have already subscribed (re-subscribe on reconnect pattern).
+// Long-lived storage. MqttConfig keeps shallow const char* pointers —
+// see KarenMqttConfig.h lifetime note. Must outlive the client.
+static char        bootId[9]  = {0};
+static String      connectTopic;
+static String      lwtPayload;
+static String      macAddress;
 static bool        subscribed = false;
+
+// ---------------------------------------------------------------------------
+// bootId — see docs/registration-protocol.md §6.2
+// ---------------------------------------------------------------------------
+static void generateBootId(char out[9])
+{
+    uint8_t mac[6] = {0};
+    esp_efuse_mac_get_default(mac);
+    uint16_t macTail = (uint16_t)((mac[4] << 8) | mac[5]);
+    uint16_t rnd     = (uint16_t)(esp_random() & 0xFFFF);
+    snprintf(out, 9, "%04x%04x", macTail, rnd);
+}
+
+static String buildConnectJson(const char* status)
+{
+    JsonDocument doc;
+    doc["deviceId"]   = kDeviceId;
+    doc["macAddress"] = macAddress;
+    doc["status"]     = status;
+    doc["bootId"]     = bootId;
+    String out;
+    serializeJson(doc, out);
+    return out;
+}
 
 // ---------------------------------------------------------------------------
 // Command handler — command-driven sensor pattern
@@ -65,40 +89,38 @@ void setup()
     }
     KAREN_MQTT_LOG("WiFi connected: %s", WiFi.localIP().toString().c_str());
 
-    // Store the availability topic in a long-lived String so c_str() stays valid.
-    availTopic = topics.availability();
+    macAddress = WiFi.macAddress();
+    generateBootId(bootId);
+
+    // Long-lived storage for LWT — must stay valid for the lifetime of mqtt.
+    connectTopic = topics.connect();
+    lwtPayload   = buildConnectJson("OFFLINE");
 
     MqttConfig cfg;
-    cfg.host     = kBroker;
-    cfg.port     = kPort;
-    cfg.clientId = kClientId;
-    cfg.deviceId = kDeviceId;
-    cfg.lwt.topic   = availTopic.c_str();
-    cfg.lwt.payload = "offline";
+    cfg.host        = kBroker;
+    cfg.port        = kPort;
+    cfg.clientId    = kClientId;
+    cfg.deviceId    = kDeviceId;
+    cfg.lwt.topic   = connectTopic.c_str();
+    cfg.lwt.payload = lwtPayload.c_str();
     cfg.lwt.qos     = 1;
     cfg.lwt.retain  = true;
-    cfg.hasLwt   = true;
+    cfg.hasLwt      = true;
 
     mqtt.begin(cfg);
-
-    // Note: do NOT call mqtt.on() here — subscriptions must be issued after
-    // the MQTT connection is established. See loop() for the connect-transition
-    // pattern. In v0.2 this will be handled via an onConnect callback.
 }
 
 void loop()
 {
     bool connected = mqtt.loop();
 
-    // Re-subscribe on every transition from disconnected → connected.
-    // v0.1 pattern: user is responsible for re-issuing subscriptions after reconnect.
-    // v0.2 will provide an onConnect callback to automate this.
     if (connected && !subscribed) {
         mqtt.on(topics.command("sensor").c_str(), handleSensorCommand);
-        // Announce device online after successful subscribe.
-        mqtt.publish(availTopic.c_str(), "online", /*retain=*/true);
+        // Announce ONLINE on the connect topic (retain=true).
+        String onlinePayload = buildConnectJson("ONLINE");
+        mqtt.publish(connectTopic.c_str(), onlinePayload.c_str(), /*retain=*/true);
         subscribed = true;
-        KAREN_MQTT_LOG("subscribed and announced online");
+        KAREN_MQTT_LOG("subscribed and announced ONLINE");
     } else if (!connected && subscribed) {
         subscribed = false;
     }
