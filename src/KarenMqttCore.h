@@ -5,9 +5,9 @@
 // Single include for all library types and helpers.
 // ---------------------------------------------------------------------------
 
-#include "KarenMqttConfig.h"
-#include "KarenMqttDebug.h"
-#include "KarenMqttTopics.h"
-#include "MqttTopicRouter.h"
-#include "MqttTransport.h"
-#include "KarenMqttClient.h"
+#include "core/KarenMqttConfig.h"
+#include "core/KarenMqttDebug.h"
+#include "topics/KarenMqttTopics.h"
+#include "router/MqttTopicRouter.h"
+#include "transport/MqttTransport.h"
+#include "client/KarenMqttClient.h"
